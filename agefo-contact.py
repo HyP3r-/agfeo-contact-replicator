@@ -33,7 +33,10 @@ class AgfeoContact:
         """
 
         contacts = []
-        for run_target in [self.run_sage, self.run_exchange]:
+        for run_target in [
+            self.run_sage,
+            self.run_exchange,
+        ]:
             contacts = contacts + run_target()
 
         contacts_str = "".join([contact.serialize() for contact in contacts])
