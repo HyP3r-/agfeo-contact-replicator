@@ -1,0 +1,18 @@
+[agfeo]
+hostname = "<hostname>"
+username = "<username>"
+password = "<password>"
+
+[plugin]
+enabled = ["exchange", "sage"]
+
+[plugin.exchange]
+username = "<username>"
+password = "<password>"
+
+[plugin.sage]
+hostname = "<hostname>"
+instance = "<instance>"
+database = "<database>"
+username = "<username>"
+password = "<password>"
