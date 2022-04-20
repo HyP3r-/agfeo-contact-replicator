@@ -17,7 +17,7 @@ class Agfeo:
         self.config = config
         self.cookies = None
 
-    def login(self) -> Tuple[bool, str]:
+    def login(self) -> bool:
         """
         Login into PBX
         """
@@ -27,12 +27,11 @@ class Agfeo:
                                                 "client": "web"}},
                                  verify=False)
         if response.status_code != 200 or response.json()["data"]["status"] != "Login Ok":
-            # TODO: is there in the response a string variant?
-            return False, str(response.content)
+            return False
 
         self.cookies = response.cookies
 
-        return True, ""
+        return True
 
     def contact_get_size(self) -> Tuple[bool, int]:
         """
@@ -60,6 +59,9 @@ class Agfeo:
         return True, list(response.json()["contacts"])
 
     def contact_set(self, contact: dict) -> Tuple[bool, dict]:
+        """
+        Update or Insert a contact into the pbx
+        """
 
         response = requests.post(f"https://{self.config['hostname']}/tkset/pim",
                                  json={"id": self.agfeo_random(), "type": 5, "offset": 0, "size": 1, "data": contact},
@@ -67,6 +69,16 @@ class Agfeo:
         if response.status_code != 200:
             return False, {}
         return True, response.json()["contact"]
+
+    def contact_delete(self, contact_uid: str) -> bool:
+        """
+        Delete contact
+        """
+
+        response = requests.post(f"https://{self.config['hostname']}/tkset/pim",
+                                 json={"id": self.agfeo_random(), "type": 6, "data": contact_uid},
+                                 cookies=self.cookies, verify=False)
+        return response.status_code == 200 and response.json()["ok"]
 
     @staticmethod
     def agfeo_random() -> int:

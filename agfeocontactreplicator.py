@@ -11,7 +11,7 @@ import toml as toml
 from sqlalchemy import Column, Index
 from sqlalchemy import Integer
 from sqlalchemy import String
-from sqlalchemy import create_engine, select, and_
+from sqlalchemy import create_engine, and_
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import declarative_base
 
@@ -105,9 +105,9 @@ class AgfeoContactReplicator:
 
         # login into agfeo
         logger.info("Agfeo: login to pbx")
-        result, response = agfeo.login()
+        result = agfeo.login()
         if not result:
-            logger.error(f"Agfeo: Error while logging in: {str(response)}")
+            logger.error(f"Agfeo: Error while logging in")
             exit()
 
         # get total size of agfeo contact store
@@ -133,19 +133,19 @@ class AgfeoContactReplicator:
             source_name, source_id = source
 
             # check if this contact is already linked to the pbx
-            stmt = select(AgfeoContactRelation).where(and_(AgfeoContactRelation.source_name == source_name,
-                                                           AgfeoContactRelation.source_id == source_id))
-            agfeo_contact_relation = self.session.execute(stmt).fetchone()
+            agfeo_contact_relation = self.session.query(AgfeoContactRelation) \
+                .filter(and_(AgfeoContactRelation.source_name == source_name,
+                             AgfeoContactRelation.source_id == source_id)) \
+                .first()
             agfeo_contact_current = None
             if agfeo_contact_relation:
-                agfeo_contact_current = agfeo_contacts.pop(agfeo_contact_relation[0].target_id, None)
+                agfeo_contact_current = agfeo_contacts.pop(agfeo_contact_relation.target_id, None)
 
             # insert or update the contact
-            logger.info(f"Agfeo: insert or update {contact.fn.value}")
+            logger.info(f"Agfeo: {'update' if agfeo_contact_current else 'insert'} {contact.fn.value}")
             result, agfeo_contact = agfeo.contact_set(agfeo.vcard_to_data(contact, agfeo_contact_current))
             if not result:
                 logger.error("Agfeo: Error while updating contact")
-                exit()
 
             if not agfeo_contact_relation:
                 agfeo_contact_relation = AgfeoContactRelation()
@@ -155,10 +155,13 @@ class AgfeoContactReplicator:
                 self.session.add(agfeo_contact_relation)
                 self.session.commit()
 
-        # TODO: now there are some agfeo_contacts left... delete them (in the relation table and pbx)!
-        for agfeo_contact in agfeo_contacts:
-            print(agfeo_contact)
-            pass
+        # contacts which are no longer in the source databases they are now deleted from the target and database
+        for contact_uid, contact in agfeo_contacts.items():
+            agfeo.contact_delete(contact_uid)
+            self.session.query(AgfeoContactRelation) \
+                .where(AgfeoContactRelation.target_id == contact_uid) \
+                .delete()
+            self.session.commit()
 
 
 if __name__ == "__main__":
