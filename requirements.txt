@@ -1,6 +1,7 @@
 exchangelib~=4.7.2
 phonenumbers~=8.12.45
 pyodbc~=4.0.32
+requests~=2.27.1
 SQLAlchemy~=1.4.32
-vobject~=0.9.6.1
 toml~=0.10.2
+vobject~=0.9.6.1
