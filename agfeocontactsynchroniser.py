@@ -27,11 +27,11 @@ __status__ = "Production"
 current_path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 
 # configure logging
-logger = logging.getLogger("agfeo-contact-replicator")
+logger = logging.getLogger("agfeo-contact-synchroniser")
 logger.setLevel(logging.INFO)
 handler_stream = logging.StreamHandler(sys.stdout)
 handler_file = logging.handlers.TimedRotatingFileHandler(
-    os.path.join(current_path, "log", "agfeo-contact-replicator.log"),
+    os.path.join(current_path, "log", "agfeo-contact-synchroniser.log"),
     when="D", interval=1, backupCount=30
 )
 formatter = logging.Formatter("%(asctime)s | %(levelname)s | %(process)d | %(message)s")
@@ -78,7 +78,7 @@ def agfeo_block(total_size, block_size):
         total_size -= size
 
 
-class AgfeoContactReplicator:
+class AgfeoContactSynchroniser:
 
     def __init__(self):
         config = os.path.join(current_path, "config.toml")
@@ -165,5 +165,5 @@ class AgfeoContactReplicator:
 
 
 if __name__ == "__main__":
-    agfeo_contact_replicator = AgfeoContactReplicator()
-    agfeo_contact_replicator.run()
+    agfeo_contact_synchroniser = AgfeoContactSynchroniser()
+    agfeo_contact_synchroniser.run()
